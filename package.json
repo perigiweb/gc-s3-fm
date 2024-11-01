@@ -1,0 +1,33 @@
+{
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "wrangler pages dev dist",
+    "deploy": "$npm_execpath run build && wrangler pages deploy dist"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.651.1",
+    "@hono/oauth-providers": "^0.6.1",
+    "@unocss/reset": "^0.59.4",
+    "bcrypt": "^5.1.1",
+    "hono": "^4.6.2",
+    "uuid": "^10.0.0",
+    "vue": "^3.5.6",
+    "vue-router": "^4.4.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240909.0",
+    "@hono/vite-cloudflare-pages": "^0.4.2",
+    "@hono/vite-dev-server": "^0.16.0",
+    "@iconify-json/mage": "^1.2.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/node": "^20.16.5",
+    "@types/uuid": "^10.0.0",
+    "@unhead/vue": "^1.11.6",
+    "@vitejs/plugin-vue": "^5.1.4",
+    "unocss": "^0.62.4",
+    "vite": "^5.4.6",
+    "wrangler": "^3.78.4"
+  }
+}
