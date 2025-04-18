@@ -10,11 +10,25 @@ export function useSessionModel(db: D1Database){
 
       return s
     }
+
+    deleteExpiredSession(): void {
+      const now = Math.floor(Date.now()/1e3)
+      const stmt = this.db.prepare(`DELETE FROM ${this.tableName} WHERE expiredAt < ?`)
+      try {
+        stmt.bind(...[now]).run()
+      } catch (err: any){
+        console.error(err)
+      }
+    }
   }
 
-  return new SessionModel({
+  const sessionModel = new SessionModel({
     db,
     tableName: 'sessions',
     timestamps: false
   })
+
+  sessionModel.deleteExpiredSession()
+
+  return sessionModel
 }

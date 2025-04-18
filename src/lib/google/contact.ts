@@ -67,6 +67,20 @@ export class GoogleContact {
     return response
   }
 
+  async getContact(resourceName: string){
+    const q = `personFields=addresses,ageRanges,biographies,birthdays,calendarUrls,clientData,coverPhotos,emailAddresses,events,externalIds,genders,imClients,interests,locales,locations,memberships,metadata,miscKeywords,names,nicknames,occupations,organizations,phoneNumbers,photos,relations,sipAddresses,skills,urls,userDefined`
+    if ( !resourceName.startsWith('people')){
+      resourceName = `people/${resourceName}`
+    }
+    const response = await fetch(`${this.baseUri}/${resourceName}?${q}`, {
+      headers: {
+        authorization: `Bearer ${this.token}`
+      }
+    }).then(res => res.json())
+
+    return response
+  }
+
   async createContact(person: Person){
     const response = await fetch(`${this.baseUri}/people:createContact`, {
       method: 'POST',
@@ -78,5 +92,27 @@ export class GoogleContact {
     }).then(resp => resp.json())
 
     return response
+  }
+
+  async deleteContact(resourceNames: string|string[]){
+    console.log('deleteContact', {resourceNames})
+    if (typeof resourceNames === "string"){
+      return await fetch(`${this.baseUri}/${resourceNames}:deleteContact`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${this.token}`
+        }
+      }).then(resp => resp.json())
+    }
+
+    return await fetch(`${this.baseUri}/people:batchDeleteContacts`, {
+      method: 'POST',
+      body: JSON.stringify({resourceNames}),
+      headers: {
+        'Content-Type': 'application/json',
+        authorization: `Bearer ${this.token}`
+      }
+    }).then(resp => resp.json())
   }
 }

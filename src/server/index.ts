@@ -9,20 +9,20 @@ import { sign, verify } from 'hono/jwt'
 
 import { getConnInfo } from 'hono/cloudflare-workers'
 
-import { googleAuth } from '@hono/oauth-providers/google'
-import type { GoogleUser } from '@hono/oauth-providers/google'
+import { googleAuth } from '../lib/oauth/providers/google'
+import type { GoogleUser } from '../lib/oauth/providers/google'
 
 import { v4 } from 'uuid'
 
-import type { Token } from './models/types'
+import type { Token, SessionOAuthToken } from './models/types'
 import { useUserModel } from './models/user'
 import { useSessionModel } from './models/session'
 
 type Bindings = {
   DB: D1Database,
-  GOOGLE_CLIENT_ID: string,
-  GOOGLE_CLIENT_SECRET: string,
-  GOOGLE_OAUTH_SCOPE: string,
+  GOOGLE_ID: string,
+  GOOGLE_SECRET: string,
+  GOOGLE_SCOPES: string,
   JWT_SECRET: string,
 }
 
@@ -59,17 +59,34 @@ app.route('/api', api)
 
 const auth = new Hono<{Bindings: Bindings, Variables: Variables}>()
 
-auth.use('/google', (c, next) => {
+auth.use('/google', async (c, next) => {
+
   const nextRedirect = c.req.query('to') || '/'
   //@ts-ignore
-  setCookie(c, 'rTo', nextRedirect, {maxAge: 600, httpOnly: true, path: '/google'})
+  setCookie(c, 'rTo', nextRedirect, {maxAge: 600, httpOnly: true, path: '/auth/google'})
+
+  //@ts-ignore
+  const sessionId = getCookie(c, 'prgSession')
+  let accessToken = undefined
+  let refreshToken = undefined
+  if (sessionId){
+    const session = await useSessionModel(c.env.DB).find(sessionId)
+    if (session){
+      const authToken = session.authToken as SessionOAuthToken
+      accessToken = authToken?.token
+      refreshToken = authToken['refresh-token']
+    }
+  }
 
   const gAuth = googleAuth({
     scope: [
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/contacts'
-    ]
+    ],
+    access_type: 'offline',
+    access_token: accessToken,
+    refresh_token: refreshToken
   })
 
   return gAuth(c, next)
@@ -127,11 +144,11 @@ auth.get('/google', async c => {
         token: token,
         'refresh-token': c.get('refresh-token'),
         'granted-scopes': grantedScopes,
-        expiredAt: Math.floor(Date.now()/1e3) + (token.expires_in || 3600)
+        expiredAt: Math.floor(Date.now()/1e3) + (token.expires_in || 3598)
       }
     })
     if (!session){
-      throw new Error(`Cannot save your session. Please try again later.`)
+      throw new HTTPException(500, {message: 'Cannot save your session. Please try again later.'})
     }
 
     //@ts-ignore
@@ -163,7 +180,7 @@ auth.get('/google', async c => {
 
     return c.redirect(to)
   } catch (err: any){
-    throw new HTTPException(400, {message: err.message})
+    throw new HTTPException(500, {message: err.message})
   }
 })
 

@@ -21,6 +21,14 @@ const router = createRouter({
             authRequired: true,
           },
         },
+        {
+          path: 'people/:contactId',
+          component: () => import('./pages/contact/ContactView.vue'),
+          name: 'g-contact-view',
+          meta: {
+            authRequired: true,
+          },
+        }
       ]
     },
     {

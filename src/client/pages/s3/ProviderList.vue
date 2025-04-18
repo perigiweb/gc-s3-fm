@@ -60,7 +60,7 @@
         </div>
       </div>
       <div v-else class="flex flex-col gap-4 flex-wrap">
-        <div class="text-right">
+        <div class="text-left">
           <button type="button" @click.prevent="showForm = true"
             class="bg-emerald-700 dark:bg-emerald-300 text-emerald-100 dark:text-emerald-900 hover:bg-emerald-800 dark:hover:bg-emerald-400 rounded-2xl px-4 py-2 text-sm font-semibold"
           ><i class="i-mage-plus inline-block"></i><span class="inline-block ml-1">Add S3 Provider</span></button>
@@ -78,8 +78,8 @@
               <RouterLink :to="`/s3/${_provider.id}${_provider.bucket ? '/'+_provider.bucket:''}`" class="text-nowrap">{{ _provider.bucket ? 'Objects List':'Buckets List' }}</RouterLink>
             </div>
             <div class="shrink-0 flex items-center gap-2">
-              <button class="bg-transparent leading-none" type="button" @click.prevent="edit(_provider)"><i class="inline-block i-mage-edit-fill align-middle"></i></button>
-              <button class="bg-transparent text-red-700 dark:text-red-500 leading-none" @click.prevent="del(_provider.id)"><i class="inline-block i-mage-trash-fill align-middle"></i></button>
+              <button type="button" class="bg-transparent leading-none" @click.prevent="edit(_provider)"><i class="inline-block i-mage-edit-fill align-middle"></i></button>
+              <button type="button" class="bg-transparent text-red-700 dark:text-red-500 leading-none" @click.prevent="del(_provider.id)"><i class="inline-block i-mage-trash-fill align-middle"></i></button>
             </div>
           </div>
         </template>

@@ -18,7 +18,7 @@ export function useUserModel(db: D1Database){
   return new Model<User>({
     db,
     tableName: 'users',
-    createdAtKey: 'registerdAt'
+    createdAtKey: 'registeredAt'
   })
   /*
   function passwordHash(plainPass: string) : string {

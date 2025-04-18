@@ -26,7 +26,8 @@ import type {
   _Object,
   Owner,
   PutObjectOutput,
-  DeleteObjectOutput
+  DeleteObjectOutput,
+  BucketLocationConstraint
 } from '@aws-sdk/client-s3'
 
 type Bindings = {
@@ -98,13 +99,13 @@ const vCallback: ValidationFunction = async (v, c) => {
 }
 
 // @ts-ignore
-s3.post('/:id?', validator('json', vCallback), async c => {
+s3.post('/', validator('json', vCallback), async c => {
   const postBody = (c.req.valid('json' as never)) as Partial<S3Provider>
   try {
     const m = useS3ProviderModel(c.env.DB)
     const session = c.get('session')
 
-    const id = c.req.param('id') || postBody.id
+    const id = postBody.id
     if (id){
       const _p = await m.find(id)
       if (!_p || _p?.userId !== session.userId){
@@ -125,7 +126,7 @@ s3.post('/:id?', validator('json', vCallback), async c => {
   }
 })
 
-s3.delete('/:id?', async c => {
+s3.delete('/', async c => {
   let { id } = await c.req.json<{id?: string|string[]}>()
 
   if ( !id) {
@@ -192,7 +193,6 @@ s3.get('/:p/:b/:prefix{.*}?', async c => {
     payload.message = `${err.message}`
   }
 
-
   return c.json(payload, 200)
 })
 
@@ -202,6 +202,7 @@ s3.post('/:p/:b', async c => {
     message: 'Unprocessed Content',
     data: undefined
   }
+  console.log('putObject')
   const { b } = c.req.param()
 
   const {name, file, keyPrefix} = await c.req.json<UploadObjectPayload>()
@@ -238,7 +239,7 @@ s3.delete('/:p/:b', async c => {
     status: 422,
     message: 'Unprocessed Content'
   }
-  const {b} = c.req.param()
+  const { b } = c.req.param()
   const { objectKey } = await c.req.json<{objectKey: string}>()
 
   const delObjectCmd = new DeleteObjectCommand({
@@ -250,13 +251,48 @@ s3.delete('/:p/:b', async c => {
     const r: DeleteObjectOutput = await client.send(delObjectCmd)
     responsePayload.status = 200
     responsePayload.message = "Object successfully deleted!"
-  } catch (err){
-    //@ts-ignore
+  } catch (err: any){
     responsePayload.message = `${err.message}`
   }
 
   return c.json(responsePayload, 200)
 })
+
+s3.post('/:p', async c => {
+  const responsePayload : {status: number, message:string|undefined} = {
+    status: 422,
+    message: 'Unprocessed Content'
+  }
+
+
+  const { bucketName } = await c.req.json<{bucketName: string}>()
+  if (bucketName !== ''){
+    const provider = c.get('s3Provider')
+    const client   = c.get('s3Client')
+
+    const createBucketCmd = new CreateBucketCommand({
+      Bucket: bucketName,
+      ACL: 'public-read',
+      CreateBucketConfiguration: {
+        LocationConstraint: provider.region as BucketLocationConstraint
+      }
+    })
+
+    try {
+      const r = await client.send(createBucketCmd)
+
+      responsePayload.status = 201
+      responsePayload.message = "Bucket successfully created."
+    } catch (err: any){
+      responsePayload.message = `${err.message}`
+    }
+  } else {
+    responsePayload.message = 'Bucket name is required!'
+  }
+
+  return c.json(responsePayload, responsePayload.status)
+})
+
 s3.get('/:p', async c => {
   const payload : {
     status: number,

@@ -53,9 +53,9 @@ export function useProviderStore(autoload: boolean = true){
 
   async function saveProvider(provider: S3Provider){
     const { accessToken } = useAuth()
-    const id = provider.id
-    delete provider.id
-    return await fetch(`/api/s3${id ? '/'+id:''}`, {
+    //const id = provider.id
+    //delete provider.id
+    return await fetch(`/api/s3`, {
       method: 'POST',
       body: JSON.stringify(provider),
       headers: {

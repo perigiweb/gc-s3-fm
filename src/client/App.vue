@@ -1,6 +1,6 @@
 <template>
   <Header />
-  <div class="container mx-auto py-6 flex-1 mt-48px">
+  <div class="container mx-auto flex-1 pt-60px h-screen">
     <router-view v-slot="{ Component }">
       <component :is="Component" :key="$route.path" />
     </router-view>

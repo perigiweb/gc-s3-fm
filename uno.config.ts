@@ -23,7 +23,7 @@ export default defineConfig({
   ],
   preflights: [
     {
-      getCSS: ({theme}) => `*{box-sizing: border-box;}
+      getCSS: ({theme}) => `*{box-sizing: border-box;scrollbar-width: thin;}
       a,
       a:visited,
       a:active {
